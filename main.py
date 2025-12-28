@@ -1,10 +1,10 @@
 import streamlit as st
 from PIL import Image
-import cv2 # Video analizė
-import librosa # Garsų analizė
-import numpy as np # MFCC apdorojimui
-from transformers import pipeline # Hugging Face ML
-import speech_recognition as sr # Balsinis įvestis
+import librosa  # Garsų analizė (veikia Streamlit Cloud'e)
+import numpy as np  # MFCC apdorojimui
+from transformers import pipeline  # Hugging Face ML
+import speech_recognition as sr  # Balsinis įvestis
+
 # Išplėsta simptomų duomenų bazė (remiantis Merck Vet Manual, PetMD, AVMA, FAO 2025 m.)
 symptoms_db = {
     "niežulys": {"ligos": ["Dermatitas", "Alergija"], "tikimybes": [75, 55], "gydymas": ["Higiena su antimikrobiniais šampūnais (chlorheksidinas)", "Antihistamininiai vaistai"]},
@@ -57,11 +57,6 @@ else:
             st.video(video_bytes)
             st.write("**Analizuojamas video (judesys, garsai)...**")
            
-            # Video analizė (frame-by-frame su OpenCV)
-            cap = cv2.VideoCapture(uploaded_video)
-            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            st.write(f"Video trukmė: {frame_count} frame'ų – analizuojamas judesys.")
-           
             # Garsų analizė iš video (Librosa – MFCC + energy)
             y, sr = librosa.load(uploaded_video)
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
@@ -98,7 +93,7 @@ else:
         st.write("**Preliminari analizė (tik tikimybės, ne diagnozė):**")
         for i in range(2):
             st.write(f"{i+1}. {db_entry['tikimybes'][i]}% – {db_entry['ligos'][i]}")
-            st.write(f" Kuo gydoma: {db_entry['gydymas'][i]}.")
+            st.write(f"   Kuo gydoma: {db_entry['gydymas'][i]}.")
        
         if palpacija.lower() == "taip":
             st.write("**Papildoma pastaba:** Užčiuopėte gumbelį – tai gali būti navikas ar abscesas. Nedelsiant kreipkitės pas vet!")
