@@ -1,11 +1,10 @@
 import streamlit as st
 from PIL import Image
-import cv2  # Video analizė
-import librosa  # Garsų analizė
-import numpy as np  # MFCC apdorojimui
-from transformers import pipeline  # Hugging Face ML
-import speech_recognition as sr  # Balsinis įvestis
-
+import cv2 # Video analizė
+import librosa # Garsų analizė
+import numpy as np # MFCC apdorojimui
+from transformers import pipeline # Hugging Face ML
+import speech_recognition as sr # Balsinis įvestis
 # Išplėsta simptomų duomenų bazė (remiantis Merck Vet Manual, PetMD, AVMA, FAO 2025 m.)
 symptoms_db = {
     "niežulys": {"ligos": ["Dermatitas", "Alergija"], "tikimybes": [75, 55], "gydymas": ["Higiena su antimikrobiniais šampūnais (chlorheksidinas)", "Antihistamininiai vaistai"]},
@@ -24,54 +23,45 @@ symptoms_db = {
     "kvėpavimo problemos": {"ligos": ["Pneumonija", "Bronchitas"], "tikimybes": [80, 60], "gydymas": ["Antibiotikai", "Inhaliacijos"]},
     "parazitinės ligos": {"ligos": ["Blusos", "Erkės"], "tikimybes": [85, 65], "gydymas": ["Antiblusiniai preparatai", "Antierkiniai vaistai"]},
 }
-
 st.set_page_config(page_title="Rūpestėlis Vet AI", page_icon="🐾", layout="wide")
-
 # App titulas ir header su disclaimer'iu
 st.title("Rūpestėlis Vet AI – Greitoji vet pagalba pirminei diagnostikai 🐾")
-
 st.header("Dėl tolesnio gydymo kreipkitės į artimiausią vet kliniką ar veterinarą – mes tik sutrumpiname kelią.")
-
 st.write("**Visada kreipkis pas veterinarą – tai ne diagnozė ir ne gydymas!**")
 st.info("**Privatumas:** Jūsų duomenys saugūs, naudojami tik analizei (GDPR compliant).")
-
 # Sutikimas duomenų apdorojimui
 sutikimas = st.checkbox("Sutinku su duomenų apdorojimu analizei (būtina tęsti)")
-
 if not sutikimas:
     st.warning("Prašome sutikti su duomenų apdorojimu, kad tęstume. Jūsų duomenys saugūs.")
 else:
-    uploaded_file = st.file_uploader("Įkelk foto (visa gyvūnas + skauda dalis)", type=["jpg", "png"], accept_multiple_files=False)  # Ribotas input
-
+    uploaded_file = st.file_uploader("Įkelk foto (visa gyvūnas + skauda dalis)", type=["jpg", "png"], accept_multiple_files=False) # Ribotas input
     uploaded_video = st.file_uploader("Jei reikia detalesnės analizės – įkelk video (šlubavimas, garsai)", type=["mp4", "mov"])
-
     if uploaded_file is not None:
         try:
             if len(uploaded_file.getvalue()) > 5 * 1024 * 1024:
                 raise ValueError("Failas per didelis – max 5MB.")
-            
+           
             image = Image.open(uploaded_file)
             st.image(image, caption="Įkeltas foto", use_column_width=True)
-            
+           
             # Realus ML veislės nustatymui iš foto (Hugging Face)
-            classifier = pipeline("image-classification", model="google/vit-base-patch16-224")  # Vision Transformer
+            classifier = pipeline("image-classification", model="google/vit-base-patch16-224") # Vision Transformer
             results = classifier(image)
-            veisle_nustatyta = results[0]['label']  # Placeholder – vėliau pritaikyti vet modelį
+            veisle_nustatyta = results[0]['label'] # Placeholder – vėliau pritaikyti vet modelį
             st.write(f"**AI nustatė veislę:** {veisle_nustatyta} (tikimybė {results[0]['score'] * 100:.2f}%)")
         except Exception as e:
             st.error(f"Klaida įkeliant foto: {e}. Bandykite įkelti kitą failą.")
-
     if uploaded_video is not None:
         try:
             video_bytes = uploaded_video.read()
             st.video(video_bytes)
             st.write("**Analizuojamas video (judesys, garsai)...**")
-            
+           
             # Video analizė (frame-by-frame su OpenCV)
             cap = cv2.VideoCapture(uploaded_video)
             frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             st.write(f"Video trukmė: {frame_count} frame'ų – analizuojamas judesys.")
-            
+           
             # Garsų analizė iš video (Librosa – MFCC + energy)
             y, sr = librosa.load(uploaded_video)
             mfcc = librosa.feature.mfcc(y=y, sr=sr)
@@ -83,7 +73,6 @@ else:
             st.write(f"Tempo: {tempo:.2f} bpm (nenormalus tempas – stebėkite kvėpavimą)")
         except Exception as e:
             st.error(f"Klaida analizuojant video: {e}. Bandykite trumpesnį video.")
-
     # Klausimų skyrius su daugiau detalių
     st.subheader("Atsakyk į klausimus (kuo daugiau detalių – tuo tiksliau analizė)")
     gyvuno_tipas = st.selectbox("Gyvūno tipas", ["Šuo", "Katė", "Kiaulė", "Karvė", "Paukštis", "Žuvis", "Augalas", "Kitas"])
@@ -100,28 +89,25 @@ else:
     if palpacija.lower() == "taip":
         dydis = st.text_input("Kokio dydžio gumbelis? (pvz., žirnio, riešuto)")
         spalva = st.text_input("Gumbelio spalva ar forma (pvz., raudonas, kietas?)")
-
     if st.button("Analizuoti su AI"):
         # Analizė su DB (ieško pagal simptomus)
-        simptomas_key = simptomas.lower().strip() if simptomas.lower().strip() in symptoms_db else "niežulys"  # Default jei nerasta
+        simptomas_key = simptomas.lower().strip() if simptomas.lower().strip() in symptoms_db else "niežulys" # Default jei nerasta
         db_entry = symptoms_db.get(simptomas_key, {"ligos": ["Neatpažinta", "Neatpažinta"], "tikimybes": [0, 0], "gydymas": ["-", "-"]})
-        
+       
         st.write("**AI nustatė veislę:** Labrador Retriever (90% tikimybė iš foto)")
         st.write("**Preliminari analizė (tik tikimybės, ne diagnozė):**")
         for i in range(2):
             st.write(f"{i+1}. {db_entry['tikimybes'][i]}% – {db_entry['ligos'][i]}")
-            st.write(f"   Kuo gydoma: {db_entry['gydymas'][i]}.")
-        
+            st.write(f" Kuo gydoma: {db_entry['gydymas'][i]}.")
+       
         if palpacija.lower() == "taip":
             st.write("**Papildoma pastaba:** Užčiuopėte gumbelį – tai gali būti navikas ar abscesas. Nedelsiant kreipkitės pas vet!")
-        
+       
         st.error("**Svarbu: Nedelsiant kreipkitės pas veterinarą! Mes ne diagnozuojame ir negydome – tai tik sutrumpina kelią.**")
         st.info("Artimiausios klinikos: [Paieška Google Maps](https://www.google.com/maps/search/veterinarijos+klinika)")
-else:
-    st.info("Įkelk foto, kad pradėtume!")
-
+    else:
+        st.info("Įkelk foto, kad pradėtume!")
 st.subheader("Edukacija: Kaip naudoti saugiai")
 st.write("- App tik preliminaru – visada pas vet.")
 st.write("- Jūsų duomenys saugūs (GDPR compliant).")
-
 st.caption("Rūpestėlis Vet AI – powered by Grok 🚀 | 2025")
