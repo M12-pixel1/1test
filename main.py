@@ -20,7 +20,7 @@ if uploaded_file is not None:
     svoris = st.text_input("Svoris apytiksliai (kg)")
     simptomas = st.text_area("Pagrindiniai simptomai (pvz., niežulys, kosulys, letargija)")
     aplinka = st.text_area("Aplinka (pvz., miškas, ūkis, drėgna, purvas)")
-    garsai = st.text_input("Garsai ar elgesys (pvz., kosulys, švokštimas)")
+    garsai = st.text_input("Garsai ar elbesys (pvz., kosulys, švokštimas)")
     istorija = st.text_area("Istorija (pvz., kontaktas su kitais gyvūnais, traumos, ankstesnės ligos)")
     dieta = st.text_input("Dieta (pvz., maistas, kiek valgo, pokyčiai apetite)")
     vakcinacija = st.text_input("Vakcinacija (pvz., paskutinė vakcina, ar visos padarytos?)")
