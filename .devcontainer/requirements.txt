@@ -1,0 +1,11 @@
+streamlit
+langgraph
+langchain
+langchain-community
+ultralytics
+torch
+torchvision
+easyocr
+moviepy
+pillow
+numpy
