@@ -207,3 +207,4 @@ for i, agent in enumerate(AGENTS):
             st.info("Laukia užduoties...")
 
 st.caption("Rūpestėlis Ekosistema v1.5 | Multimodal + Garso analizė | 2025")
+api_key = st.secrets["grok_api_key"]  # automatiškai paima iš Cloud UI
