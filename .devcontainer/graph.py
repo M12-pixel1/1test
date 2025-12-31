@@ -33,3 +33,15 @@ def create_agent_graph():
     graph.add_conditional_edges("supervisor", lambda s: agents[:1])  # paprastas testui
     
     return graph.compile()
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+# Grok jei turi SDK, arba per custom
+
+llm_claude = ChatAnthropic(model="claude-3-5-sonnet-20241022", api_key="tavo_key")
+llm_gpt = ChatOpenAI(model="gpt-4o", api_key="tavo_key")
+llm_grok = ChatOpenAI(base_url="https://api.x.ai/v1", model="grok-beta", api_key="tavo_key")
+
+# Agentams priskiri:
+kodo_agent.llm = llm_claude
+image_agent.llm = llm_gpt
+vet_agent.llm = llm_grok
