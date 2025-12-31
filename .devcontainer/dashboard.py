@@ -1,86 +1,70 @@
 """
-Rūpestėlio Ekosistemos Dashboard v1.2 – Indentation pataisyta + stabilus
+Rūpestėlio Ekosistemos Dashboard v1.0 – Startas su hibridu
+CrewAI roles + LangGraph state (simuliacija pradžiai)
 """
 import streamlit as st
 from datetime import datetime
 
-# Importai
-try:
-    from graph import create_agent_graph, AgentState
-    from tools import get_available_tools
-except ImportError as e:
-    st.error(f"Import klaida: {e}. Patikrink, ar graph.py ir tools.py yra kataloge.")
-    st.stop()
-
-# CSS (tas pats gražus)
-st.markdown("""
-<style>
-    /* ... visas Claude CSS kodas ... */
-</style>
-""", unsafe_allow_html=True)
-
 # Session state
-def init_session_state():
-    defaults = {
-        'graph': create_agent_graph(),
-        'messages': [],
-        'agent_outputs': {a: [] for a in ["testuotojas", "vet_ekspertas", "kodo_fixer", "image_analyzer", "monetizacijos_strategas"]},
-        'current_task': None,
-        'task_history': [],
-        'execution_stats': {'total_tasks': 0, 'successful_tasks': 0, 'failed_tasks': 0, 'total_execution_time': 0},
-        'available_tools': get_available_tools(),
-        'errors_log': []
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+if 'agent_outputs' not in st.session_state:
+    st.session_state.agent_outputs = {
+        "testuotojas": [],
+        "vet_ekspertas": [],
+        "kodo_fixer": [],
+        "image_analyzer": [],
+        "monetizacijos_strategas": []
     }
-    for k, v in defaults.items():
-        if k not in st.session_state:
-            st.session_state[k] = v
 
-init_session_state()
+# Gražus UI
+st.set_page_config(page_title="Rūpestėlio Ekosistema", page_icon="🐾", layout="wide")
+st.title("🐾 Rūpestėlio Ekosistemos Vadovo Centras")
+st.markdown("**Multi-Agent AI Sistema – hibridas CrewAI + LangGraph**")
 
-# Agentai (tas pats)
-AGENTS = { ... }  # kopijuok iš Claude
+# Agentai
+AGENTS = {
+    "testuotojas": "🧪 Testuotojas – tikrina kodą ir testus",
+    "vet_ekspertas": "🏥 Vet Ekspertas – medicininis tikslumas",
+    "kodo_fixer": "🔧 Kodo Fixer'is – taiso klaidas",
+    "image_analyzer": "📸 Image Analyzer – vaizdų analizė",
+    "monetizacijos_strategas": "💰 Monetizacija – pelno planai"
+}
 
-# Sidebar (tas pats)
+# Sidebar
 with st.sidebar:
-    st.title("🐾 Rūpestėlio Ekosistema")
-    # ... statistika, tools, reset ...
+    st.header("Agentai")
+    for desc in AGENTS.values():
+        st.write(desc)
+    st.divider()
+    st.caption("v1.0 | CrewAI + LangGraph hibridas")
 
-# Main
-st.title("🎯 Vadovo Komandų Centras")
-
-# Užduotis – teisinga indentacija!
+# Užduotis
 with st.form("task_form"):
-    task_input = st.text_area("Užduotis agentams", height=120)
-    selected_agents = st.multiselect("Agentai", options=list(AGENTS.keys()), default=list(AGENTS.keys()))
-    use_tools = st.checkbox("Naudoti tools", value=True)
-    submitted = st.form_submit_button("Vykdyti")
+    task = st.text_area("Užduotis agentams", height=120, placeholder="Pvz.: Išanalizuok šunų niežulį ir pataisyk kodą")
+    selected = st.multiselect("Agentai", options=list(AGENTS.keys()), default=list(AGENTS.keys()))
+    go = st.form_submit_button("Vykdyti užduotį")
 
-# Teisinga indentacija – visas if blokas po with!
-if submitted and task_input:
+if go and task:
     with st.spinner("Agentai dirba..."):
-        initial_state = AgentState(
-            task=task_input,
-            messages=[],
-            selected_agents=selected_agents,
-            use_tools=use_tools
-        )
-        try:
-            final_state = st.session_state.graph.invoke(initial_state)
-            st.success("Užduotis įvykdyta!")
-            st.rerun()
-        except Exception as e:
-            st.error(f"Klaida: {e}")
+        # Simuliacija (realiam LangGraph invoke)
+        for agent in selected:
+            response = f"{AGENTS[agent]} gavo užduotį:\n{task}\n\n**Atsakymas:** Simuliuotas – viskas veikia! (Realus graph'as kitame žingsnyje)"
+            st.session_state.agent_outputs[agent].append({"time": datetime.now().strftime("%H:%M"), "response": response})
+        st.success("Užduotis įvykdyta!")
+        st.rerun()
 
-# Tabs (tas pats)
-tabs = st.tabs([info['name'] for info in AGENTS.values()])
-for i, (agent_id, info) in enumerate(AGENTS.items()):
+# Tabs su agentais
+tabs = st.tabs(list(AGENTS.values()))
+for i, agent in enumerate(AGENTS.keys()):
     with tabs[i]:
-        st.markdown(f"#### {info['name']}")
-        st.caption(info['description'])
-        if st.session_state.agent_outputs[agent_id]:
-            for item in reversed(st.session_state.agent_outputs[agent_id][-5:]):
-                st.write(item['output'])
+        outputs = st.session_state.agent_outputs[agent]
+        if outputs:
+            for out in reversed(outputs):
+                st.markdown(f"**{out['time']}**")
+                st.write(out["response"])
+                st.divider()
         else:
-            st.info("Dar nėra atsakymų")
+            st.info("Dar nėra atsakymų – įvesk užduotį!")
 
-st.caption("Rūpestėlis Ekosistema v1.2 | LangGraph + Streamlit – klaidos pataisytos")
+st.caption("Rūpestėlis Ekosistema | Startas sėkmingas – einam toliau!")
